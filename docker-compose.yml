@@ -1,0 +1,50 @@
+# docker-compose up --build
+# docker-compose down -v
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0.33
+    container_name: mysql_container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: shopping_mall
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  nestjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nestjs_container
+    restart: always
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=1234
+      - DB_DATABASE=shopping_mall
+    depends_on:
+      - mysql
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/usr/src/app
+
+  ngrok:
+    image: wernight/ngrok
+    container_name: ngrok_container
+    restart: always
+    environment:
+      NGROK_AUTH: "2ggfeG0DJg6Vpp8hWyCCAxIGBGv_54rbxF3D1zeZZNP8desdR" # 여기에 Ngrok 인증 토큰을 넣으세요
+      NGROK_PORT: "nestjs:3000"
+    depends_on:
+      - nestjs
+    ports:
+      - '4040:4040'
+
+volumes:
+  mysql_data:
